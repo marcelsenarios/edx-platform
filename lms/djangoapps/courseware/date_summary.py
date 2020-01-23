@@ -23,6 +23,7 @@ from course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from lms.djangoapps.commerce.utils import EcommerceService
 from lms.djangoapps.verify_student.models import VerificationDeadline
 from lms.djangoapps.verify_student.services import IDVerificationService
+from openedx.core.djangoapps.catalog.utils import get_course_run_details
 from openedx.core.djangoapps.certificates.api import can_show_certificate_available_date_field
 from openedx.core.djangolib.markup import HTML, Text
 from openedx.features.course_experience import UPGRADE_DEADLINE_MESSAGE, CourseHomeMessages
@@ -287,6 +288,14 @@ class CourseEndDate(DateSummary):
 
     @property
     def date(self):
+        if self.course.self_paced:
+            weeks_to_complete = get_course_run_details(self.course.id, ['weeks_to_complete']).get('weeks_to_complete')
+            if weeks_to_complete:
+                course_duration = datetime.timedelta(weeks=weeks_to_complete)
+                if self.course.end < (self.current_time + course_duration):
+                    return self.course.end
+                return None
+
         return self.course.end
 
     def register_alerts(self, request, course):
@@ -316,6 +325,59 @@ class CourseEndDate(DateSummary):
                         course_end_time=self.short_time_html,
                     )
                 )
+
+
+class CourseAssignmentDate(DateSummary):
+    css_class = 'assignment'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.assignment_date = None
+        self.assignment_link = None
+        self.assignment_link_text = None
+        self.assignment_title = None
+        self.assignment_requires_full_access = None
+
+    @property
+    def date(self):
+        return self.assignment_date
+
+    @date.setter
+    def date(self, date):
+        self.assignment_date = date
+
+    @property
+    def link(self):
+        return self.assignment_link
+
+    @link.setter
+    def link(self, link):
+        self.assignment_link = link
+
+    @property
+    def link_text(self):
+        """The text of the link."""
+        return self.assignment_link_text
+
+    @link_text.setter
+    def link_text(self, link_text):
+        self.assignment_link_text = link_text
+
+    @property
+    def title(self):
+        return self.assignment_title
+
+    @title.setter
+    def title(self, title):
+        self.assignment_title = title
+
+    @property
+    def requires_full_access(self):
+        return self.assignment_requires_full_access
+
+    @requires_full_access.setter
+    def requires_full_access(self, requires_full_access):
+        self.assignment_requires_full_access = requires_full_access
 
 
 class CertificateAvailableDate(DateSummary):
