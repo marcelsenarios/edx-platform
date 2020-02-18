@@ -6,8 +6,12 @@
             var MyTeamsView = TeamsView.extend({
 
                 initialize: function(options) {
-                    this.options = _.extend({}, options);
-                    this.getTopic = options.getTopic;
+                    if (options.hasOwnProperty('getTopic')){
+                        this.getTopic = options.getTopic;
+                    } else {
+                         // eslint-disable-next-line no-unused-vars
+                        this.getTopic = function(topicId) { return $.Deferred().resolve({type: 'open'}).promise(); };
+                    }
                     TeamsView.prototype.initialize.call(this, options);
                 },
 
@@ -29,7 +33,6 @@
                 getTopicType: function(topicId) {
                     var deferred = $.Deferred();
                     this.getTopic(topicId).done(function(topic) {
-                        console.log(topic.get('name'), topic.get('type'))
                         deferred.resolve(topic.get('type'));
                     });
                     return deferred.promise();
