@@ -160,7 +160,7 @@ var StaffDebug = (function() {
 
 // Register click handlers
 $(document).ready(function() {
-    var $courseContent = $('.course-content');
+    var $courseContent = $('#main');
     $courseContent.on('click', '.staff-debug-reset', function() {
         StaffDebug.reset($(this).parent().data('location-name'), $(this).parent().data('location'));
         return false;
